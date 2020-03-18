@@ -2,6 +2,7 @@ foo = "bar"
 somelist = [
   "one",
   "two",
+  "three"
 ]
 
 somemap = {
