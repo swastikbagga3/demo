@@ -1,0 +1,169 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Metadata": {
+        "AWS::CloudFormation::Designer": {
+            "7751202e-6cc3-4b34-aa87-5247e7d1c4e7": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 747,
+                    "y": 211
+                },
+                "z": 0,
+                "embeds": []
+            },
+            "12a6165f-ffbb-4e6b-adba-333a59fd6bf9": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 599,
+                    "y": 222
+                },
+                "z": 0,
+                "embeds": []
+            },
+            "caa19300-d411-448d-9d9c-d833e6f44135": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 670,
+                    "y": 140
+                },
+                "z": 0,
+                "embeds": []
+            }
+        }
+    },
+    "Resources": {
+        "MahS3Bucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "AccessControl": "PublicRead",
+                "WebsiteConfiguration": {
+                    "IndexDocument": "index.html",
+                    "ErrorDocument": "error.html"
+                },
+                "VersioningConfiguration": {
+                    "Status": "Suspended"
+                },
+                "Tags": [
+                    {
+                        "Key": "keyname1",
+                        "Value": "value1"
+                    },
+                    {
+                        "Key": "keyname2",
+                        "Value": "value2"
+                    }
+                ],
+                "BucketEncryption": {
+                    "ServerSideEncryptionConfiguration": [
+                        {
+                            "ServerSideEncryptionByDefault": {
+                                "SSEAlgorithm": "AES256"
+                            }
+                        }
+                    ]
+                },
+                "BucketName" : "MahBucketName"
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "7751202e-6cc3-4b34-aa87-5247e7d1c4e7"
+                }
+            }
+        },
+        "MahRDSInstance": {
+            "Type": "AWS::RDS::DBInstance",
+            "Properties": {
+                "AllocatedStorage": "100",
+                "DBInstanceClass": "db.m1.small",
+                "Engine": "MySQL",
+                "Iops": "1000",
+                "MasterUsername": "master",
+                "MasterUserPassword": "Password123",
+                "DeletionProtection": false,
+                "PubliclyAccessible": true,
+                "StorageEncrypted": false
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "12a6165f-ffbb-4e6b-adba-333a59fd6bf9"
+                }
+            }
+        },
+        "MahRedshiftCluster": {
+            "Type": "AWS::Redshift::Cluster",
+            "Properties": {
+                "DBName": "mydb",
+                "MasterUsername": "master",
+                "MasterUserPassword": "Password123",
+                "NodeType": "ds2.xlarge",
+                "ClusterType": "single-node",
+                "Tags": [
+                    {
+                        "Key": "foo",
+                        "Value": "bar"
+                    }
+                ],
+                "Encrypted": false,
+                "PubliclyAccessible": true
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "caa19300-d411-448d-9d9c-d833e6f44135"
+                }
+            }
+        },
+        "MahCloudTrail" : {
+            "Type" : "AWS::CloudTrail::Trail",
+            "Properties" : {
+                "EnableLogFileValidation" : false,
+                "SnsTopicName" : {"Fn::GetAtt":["Topic","TopicName"]},
+                "IsMultiRegionTrail" : false,
+                "KMSKeyId" : "kms_key_test_id",
+                "S3BucketName" : "MahBucketName"
+            }
+        },
+        "mahVPC" : {
+            "Type" : "AWS::EC2::VPC",
+            "Properties" : {
+                "CidrBlock" : "10.0.0.0/16",
+                "EnableDnsSupport" : "false",
+                "EnableDnsHostnames" : "false",
+                "InstanceTenancy" : "dedicated",
+                "Tags" : [ {"Key" : "foo", "Value" : "bar"} ]
+            }
+        },
+        "MahFlowLog" : {
+            "Type" : "AWS::EC2::FlowLog",
+            "Properties" : {
+                "DeliverLogsPermissionArn" : { "Fn::GetAtt" : ["FlowLogRole", "Arn"] },
+                "LogGroupName" : "FlowLogsGroup",
+                "ResourceId" : { "Ref" : "mahVPC" },
+                "ResourceType" : "VPC",
+                "TrafficType" : "ALL"
+            }
+        },
+        "MahPolicy" : {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "root",
+                "PolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [
+                    { "Effect": "Allow", "Action": "*", "Resource": "*" }
+                    ]
+                },
+                "Roles": [ { "Ref": "RootRole" } ],
+                "Users": [ { "Ref": "RootRole" } , { "Ref": "RootRole" } ]
+            }
+        }
+    }
+}
